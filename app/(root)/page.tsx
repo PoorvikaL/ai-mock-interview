@@ -2,9 +2,29 @@ import React from 'react'
 import {Button} from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import {dummyInterviews} from "@/constants";
 import InterviewCard from "@/components/InterviewCard";
-const Page = () => {
+import {getCurrentUser} from "@/lib/actions/auth.action";
+import {getInterviewsByUserId, getLatestInterviews} from "@/lib/actions/general.action";
+import {redirect} from "next/navigation";
+
+const Page = async () => {
+    const user = await getCurrentUser();
+
+    // Redirect if no user is logged in
+    if (!user?.id) {
+        redirect('/sign-in');  // or redirect anywhere appropriate
+    }
+
+    const [userInterviews, latestInterviews] = await Promise.all([
+        getInterviewsByUserId(user.id),
+        getLatestInterviews({ userId: user.id }),
+    ]);
+
+
+
+    const hasPastInterviews = userInterviews?.length! > 0;
+    const hasUpcomingInterviews = latestInterviews?.length! > 0;
+
     return (
         <>
             <section className='card-cta'>
@@ -14,7 +34,7 @@ const Page = () => {
                         Practise on real interview questions & get instant feedback
                     </p>
                     <Button asChild className="btn-primary-max-sm:w-full">
-                        <Link href="/intreview">Start an Interview
+                        <Link href="/interview">Start an Interview
                         </Link>
                     </Button>
                 </div>
@@ -25,10 +45,12 @@ const Page = () => {
                 <h2>Your interviews</h2>
 
                 <div className="interview-section">
-                    {dummyInterviews.map((interview) => (
-                        <InterviewCard {...interview} key = {interview.id}/>
-                    ))}
-                    {/*<p>you haven&apos;t taken any interviews</p>*/}
+                    {hasPastInterviews ? (
+                            userInterviews?.map((interview) => (
+                                <InterviewCard {...interview} key = {interview.id}/>
+                            ))) : (
+                                <p>you haven&apos;t taken any interviews</p>
+                            ) }
                 </div>
             </section>
 
@@ -36,9 +58,12 @@ const Page = () => {
                 <h2>Take an Interview</h2>
 
                 <div className="interview-section">
-                    {dummyInterviews.map((interview) => (
-                        <InterviewCard {...interview} key={interview.id}/>
-                    ))}
+                    {hasUpcomingInterviews ? (
+                        latestInterviews?.map((interview) => (
+                            <InterviewCard {...interview} key = {interview.id}/>
+                        ))) : (
+                        <p>There are no new interviews available</p>
+                    ) }
                 </div>
             </section>
 
