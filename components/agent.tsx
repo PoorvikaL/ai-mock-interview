@@ -94,7 +94,7 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
             } else {
                 handleGenerateFeedback(messages);
             }
-        }
+        }c
     }, [callStatus]);
 
     const handleCall = async () => {
